@@ -17,7 +17,7 @@ year varchar(4)
 CREATE TABLE IF NOT EXISTS track (
 track_id serial PRIMARY KEY,
 name varchar(50),
-length integer,
+length real,
 album_id integer, 
 FOREIGN KEY (album_id) REFERENCES album (album_id)
 );
