@@ -6,3 +6,6 @@ COPY collection FROM 'C:\HW_DB\HW_3\collections.csv' DELIMITER ';' CSV;
 COPY collection_track FROM 'C:\HW_DB\HW_3\collection_track.csv' DELIMITER ';' CSV;
 COPY musician_album FROM 'C:\HW_DB\HW_3\band_album.csv' DELIMITER ';' CSV;
 COPY genre_musician FROM 'C:\HW_DB\HW_3\band_genre.csv' DELIMITER ';' CSV;
+
+INSERT INTO genre_musician (id, musician_id, genre_id)
+VALUES (13,2,1);
