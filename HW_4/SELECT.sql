@@ -31,3 +31,10 @@ JOIN track t ON ct.track_id = t.track_id
 JOIN musician_album ma ON t.album_id = ma.album_id
 JOIN musician m ON ma.musician_id = m.musician_id 
 WHERE m.name = 'Nickelback'
+
+--Названия альбомов, в которых присутствуют исполнители более чем одного жанра.
+SELECT DISTINCT a.name FROM album a 
+JOIN musician_album ma ON a.album_id = ma.album_id 
+WHERE ma.musician_id IN (SELECT gm.musician_id FROM genre_musician gm 
+GROUP BY gm.musician_id
+HAVING count(*) > 1);
