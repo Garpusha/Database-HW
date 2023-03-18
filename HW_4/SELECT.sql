@@ -38,3 +38,21 @@ JOIN musician_album ma ON a.album_id = ma.album_id
 WHERE ma.musician_id IN (SELECT gm.musician_id FROM genre_musician gm 
 GROUP BY gm.musician_id
 HAVING count(*) > 1);
+
+--Ќаименовани€ треков, которые не вход€т в сборники.
+SELECT t.name FROM track t 
+WHERE t.track_id NOT IN (SELECT ct.track_id FROM collection_track ct);
+
+--»сполнитель или исполнители, написавшие самый короткий по продолжительности трек, Ч теоретически таких треков может быть несколько.
+SELECT DISTINCT m.name FROM musician m 
+JOIN musician_album ma ON m.musician_id = ma.musician_id 
+JOIN track t ON ma.album_id = t.album_id 
+WHERE t.length = (SELECT min(t.length) FROM track t);
+
+--Ќазвани€ альбомов, содержащих наименьшее количество треков.
+SELECT a.name FROM album a 
+WHERE a.album_id IN (SELECT album_id FROM 
+(SELECT t.album_id, count(t.album_id) FROM track t 
+GROUP BY t.album_id) AS test
+WHERE count = (SELECT min(count) from (SELECT t.album_id, count(t.album_id) FROM track t 
+GROUP BY t.album_id) AS z));
