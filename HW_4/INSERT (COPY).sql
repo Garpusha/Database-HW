@@ -9,3 +9,6 @@ COPY genre_musician FROM 'C:\HW_DB\HW_3\band_genre.csv' DELIMITER ';' CSV;
 
 INSERT INTO genre_musician (id, musician_id, genre_id)
 VALUES (13,2,1);
+
+INSERT INTO collection_track (id, collection_id, track_id)
+VALUES (151, 10, 995);
