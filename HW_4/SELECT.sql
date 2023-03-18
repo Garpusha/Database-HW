@@ -25,12 +25,12 @@ WHERE a.year = 2020
 GROUP BY m.name);
 
 --Названия сборников, в которых присутствует конкретный исполнитель (выберите его сами).
-SELECT c.name FROM collection c 
+SELECT DISTINCT c.name FROM collection c 
 JOIN collection_track ct ON c.collection_id = ct.collection_id 
 JOIN track t ON ct.track_id = t.track_id 
 JOIN musician_album ma ON t.album_id = ma.album_id
 JOIN musician m ON ma.musician_id = m.musician_id 
-WHERE m.name = 'Nickelback'
+WHERE m.name = 'Анна Пингина'
 
 --Названия альбомов, в которых присутствуют исполнители более чем одного жанра.
 SELECT DISTINCT a.name FROM album a 
