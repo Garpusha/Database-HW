@@ -7,7 +7,7 @@ ORDER BY count(*) DESC;
 --Количество треков, вошедших в альбомы 2019–2020 годов.
 SELECT count(*) FROM album a 
 JOIN track t ON a.album_id = t.album_id
-WHERE a.year >= 2019 AND a.YEAR <= 2020
+WHERE a.year BETWEEN 2019 AND 2020;
 
 --Средняя продолжительность треков по каждому альбому.
 SELECT a.name, round(avg(t.length), 2) FROM album a 
@@ -39,8 +39,9 @@ GROUP BY a.name, gm.musician_id
 HAVING count(genre_id) > 1;
 
 --Наименования треков, которые не входят в сборники.
-SELECT t.name FROM track t 
-WHERE t.track_id NOT IN (SELECT ct.track_id FROM collection_track ct);
+SELECT t.name FROM track t
+LEFT JOIN collection_track ct ON t.track_id = ct.track_id
+WHERE ct.track_id IS NULL;
 
 --Исполнитель или исполнители, написавшие самый короткий по продолжительности трек, — теоретически таких треков может быть несколько.
 SELECT DISTINCT m.name FROM musician m 
@@ -49,9 +50,12 @@ JOIN track t ON ma.album_id = t.album_id
 WHERE t.length = (SELECT min(t.length) FROM track t);
 
 --Названия альбомов, содержащих наименьшее количество треков.
-SELECT a.name FROM album a 
-WHERE a.album_id IN (SELECT album_id FROM 
-(SELECT t.album_id, count(t.album_id) FROM track t 
-GROUP BY t.album_id) AS test
-WHERE count = (SELECT min(count) from (SELECT t.album_id, count(t.album_id) FROM track t 
-GROUP BY t.album_id) AS z));
+SELECT a.name FROM album a
+JOIN track t ON t.album_id = a.album_id
+GROUP BY a.name
+HAVING COUNT(t.track_id) = (
+	SELECT COUNT(t.track_id) FROM track t
+	JOIN album a ON a.album_id = t.album_id
+	GROUP BY a.name
+	ORDER BY COUNT(t.track_id)
+	LIMIT 1);
