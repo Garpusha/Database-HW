@@ -5,13 +5,15 @@ name varchar(50) NOT NULL
 
 CREATE TABLE IF NOT EXISTS musician (
 musician_id serial PRIMARY KEY,
-name varchar(50) NOT NULL
+name varchar(50) NOT NULL,
+url varchar(100)
 );
 
 CREATE TABLE IF NOT EXISTS album (
 album_id serial PRIMARY KEY,
 name varchar(50) NOT NULL,
-year integer NOT NULL CONSTRAINT real_year CHECK (year > 1900 AND year < 2100)
+year integer NOT NULL CONSTRAINT real_year CHECK (year > 1900 AND year < 2100),
+url varchar(100)
 );
 
 CREATE TABLE IF NOT EXISTS track (
@@ -19,7 +21,8 @@ track_id serial PRIMARY KEY,
 name varchar(50) NOT NULL,
 length int NOT NULL CONSTRAINT real_len CHECK (length > 0),
 album_id integer, 
-FOREIGN KEY (album_id) REFERENCES album (album_id)
+FOREIGN KEY (album_id) REFERENCES album (album_id),
+url varchar(100)
 );
 
 CREATE TABLE IF NOT EXISTS collection (
