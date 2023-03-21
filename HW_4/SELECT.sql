@@ -5,11 +5,9 @@ GROUP BY g.name
 ORDER BY count(*) DESC;
 
 --Количество треков, вошедших в альбомы 2019–2020 годов.
-SELECT a.name, count(*) FROM album a 
+SELECT count(*) FROM album a 
 JOIN track t ON a.album_id = t.album_id
 WHERE a.year >= 2019 AND a.YEAR <= 2020
-GROUP BY a.name
-ORDER BY count(*) DESC;
 
 --Средняя продолжительность треков по каждому альбому.
 SELECT a.name, round(avg(t.length), 2) FROM album a 
@@ -34,10 +32,11 @@ WHERE m.name = 'Анна Пингина'
 
 --Названия альбомов, в которых присутствуют исполнители более чем одного жанра.
 SELECT DISTINCT a.name FROM album a 
-JOIN musician_album ma ON a.album_id = ma.album_id 
-WHERE ma.musician_id IN (SELECT gm.musician_id FROM genre_musician gm 
-GROUP BY gm.musician_id
-HAVING count(*) > 1);
+JOIN musician_album ma ON a.album_id = ma.album_id
+JOIN musician m ON ma.musician_id = m.musician_id
+JOIN genre_musician gm ON m.musician_id = gm.musician_id
+GROUP BY a.name, gm.musician_id
+HAVING count(genre_id) > 1;
 
 --Наименования треков, которые не входят в сборники.
 SELECT t.name FROM track t 
