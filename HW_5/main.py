@@ -3,6 +3,7 @@ from psycopg2.extensions import AsIs
 import configparser
 from random import randint
 
+
 class UserRecords:
 
     def __init__(self, host_, port_, dbname_, user_, password_):
@@ -118,27 +119,67 @@ class UserRecords:
             self.connection.commit()
             print(f'Phone number {phone_} was added to UserID {user_id}')
 
-def read_config(path, section, parameter):
-     config = configparser.ConfigParser()
-     config.read(path)
-     c_value = config.get(section, parameter)
-     return c_value
+    def change(self):
+        user_id = input('Enter UserID to update information: ')
+        if not user_id.isdecimal():
+            print('Wrong ID, only decimal numbers allowed.')
+            return
+        user_id = int(user_id)
+        with self.connection.cursor() as my_cur:
+            my_cur.execute("SELECT COUNT(user_id) FROM users WHERE user_id = %s;", (user_id,))
+            records_ = my_cur.fetchone()[0]
+            # records_ = [(record_[0]) for record_ in records_]
+            if records_ == 0:
+                print(f'UserID {user_id} not found.')
+                return
+            user_details = get_new_identity()
+            my_cur.execute("""
+            UPDATE users SET name = %s, surname = %s WHERE user_id = %s;
+            """, (user_details[0], user_details[1], user_id))
+            my_cur.execute("""
+            UPDATE emails SET email = %s WHERE user_id = %s;
+            """, (user_details[2], user_id))
+            my_cur.execute("""
+            UPDATE emails SET email = %s WHERE user_id = %s;
+            """, (user_details[2], user_id))
+            self.connection.commit()
+            my_cur.execute("SELECT count(phone_no) FROM phones WHERE user_id = %s;", (user_id,))
+            phones_ = my_cur.fetchone()[0]
+            if phones_ !=0:
+                my_cur.execute("SELECT phone_id FROM phones WHERE user_id = %s;", (user_id,))
+                phone_ids_ = my_cur.fetchall()
+                phone_ids_ = [(phone_id_[0]) for phone_id_ in phone_ids_]
+                user_details[3] = []
+                for index, phone_id_ in enumerate(phone_ids_):
+                    user_details[3].append(randint(1000000, 9999999))
+                    my_cur.execute("UPDATE phones SET phone_no = %s WHERE phone_id = %s;", (user_details[3][index], phone_id_))
+                self.connection.commit()
+            print(f'Record updated: UserID {user_id}')
+            print(f'{user_details[0]} {user_details[1]}, {user_details[2]}')
+            [print(index, end=' ') for index in user_details[3]]
+            print('\n')
 
+def read_config(path, section, parameter):
+    config = configparser.ConfigParser()
+    config.read(path)
+    c_value = config.get(section, parameter)
+    return c_value
 
 
 def get_new_identity():
     phone_ = []
-    names = ['John', 'Peter', 'Tanya', 'Elena', 'Bill', 'Phil', 'Andrew', 'Alex', 'Joanna', 'Ivanna', 'Iren', \
-            'Sam', 'Bruce', 'Kylie', 'Daniel', 'Linda', 'Mary', 'Chris', 'Christina', 'Penny']
+    names = ['John', 'Peter', 'Tanya', 'Elena', 'Bill', 'Phil', 'Andrew', 'Alex', 'Joanna', 'Ivanna', 'Iren',
+             'Sam', 'Bruce', 'Kylie', 'Daniel', 'Linda', 'Mary', 'Chris', 'Christina', 'Penny']
     name_ = names[randint(0, len(names))]
-    surnames = ['Johnson', 'Curtis', 'Willis', 'Smith', 'Ripley', 'Morgan', 'Jefferson', 'McCallan', 'Andersson',\
-               'Peterson', 'Jackson', 'Jones', 'Sanders', 'Nixon', 'Callahan', 'Richards', 'Newman', 'Hatfield',\
-               'Newman', 'Burton']
+    surnames = ['Johnson', 'Curtis', 'Willis', 'Smith', 'Ripley', 'Morgan', 'Jefferson', 'McCallan', 'Andersson',
+                'Peterson', 'Jackson', 'Jones', 'Sanders', 'Nixon', 'Callahan', 'Richards', 'Newman', 'Hatfield',
+                'Newman', 'Burton']
     surname_ = surnames[randint(0, len(surnames))]
 
     phone_ = [randint(1000000, 9999999) for index in range(0, randint(0, 2))]
     mail_ = f'{name_}.{surname_}@fakeidentity.com'
     return [name_, surname_, mail_, phone_]
+
 
 if __name__ != '__main__':
     exit()
@@ -168,9 +209,7 @@ while True:
         my_record.create(get_new_identity())
     elif choice == '2':
         my_record.add_phone()
+    elif choice == '3':
+        my_record.change()
     elif choice == '7':
         my_record.get_list()
-
-
-
-
