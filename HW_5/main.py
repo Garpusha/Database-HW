@@ -100,7 +100,7 @@ class UserRecords:
             WHERE user_id = %s;""", (user_id,))
             emails_ = my_cur.fetchall()
             print(f'E-mails: ', end=' ')
-            [print(f'{email_}', end=' ') for email_ in emails_]
+            [print(f'{email_[0]}', end=' ') for email_ in emails_]
             print(f'\nPhones: ', end=' ')
             my_cur.execute("""
             SELECT phone_no FROM phones
@@ -213,14 +213,14 @@ class UserRecords:
 
     def find(self):  # Find existing user by parameters
         with self.connection.cursor() as my_cur:
-            print('Search by:\n 1. Name\n2. Surname\n3. E-mail\n4. Phone\n')
+            print('Search by:\n1. Name\n2. Surname\n3. E-mail\n4. Phone\n')
             choice_ = input('Enter option: ')
             if choice_ == '1':
                 choice_ = input('Enter name: ')
                 my_cur.execute('''SELECT COUNT(name), user_id FROM users WHERE name = %s
                                GROUP BY user_id;''', (choice_,))
                 user_details_ = my_cur.fetchone()
-                if user_details_ == None:
+                if not user_details_:
                     print(f'User {choice_} not found.')
                     return
                 self.print_user_details(user_details_[1])
@@ -229,7 +229,7 @@ class UserRecords:
                 my_cur.execute('''SELECT COUNT(name), user_id FROM users WHERE surname = %s
                 GROUP BY user_id;''', (choice_,))
                 user_details_ = my_cur.fetchone()
-                if user_details_ == None:
+                if not user_details_:
                     print(f'User {choice_} not found.')
                     return
                 self.print_user_details(user_details_[1])
@@ -238,7 +238,7 @@ class UserRecords:
                 my_cur.execute('''SELECT COUNT(email), user_id FROM emails WHERE email = %s
                                GROUP BY user_id;''', (choice_,))
                 user_details_ = my_cur.fetchone()
-                if user_details_ == None:
+                if not user_details_:
                     print(f'User with e-mail {choice_} not found.')
                     return
                 self.print_user_details(user_details_[1])
@@ -247,7 +247,7 @@ class UserRecords:
                 my_cur.execute('''SELECT COUNT(phone_no), user_id FROM phones WHERE phone_no = %s
                                GROUP BY user_id;''', (choice_,))
                 user_details_ = my_cur.fetchone()
-                if user_details_ == None:
+                if not user_details_:
                     print(f'User with phone number {choice_} not found.')
                     return
                 self.print_user_details(user_details_[1])
@@ -264,14 +264,13 @@ def read_config(path, section, parameter):  # Reading configs
 
 
 def get_new_identity():  # Generate user data
-    phone_ = []
     names = ['John', 'Peter', 'Tanya', 'Elena', 'Bill', 'Phil', 'Andrew', 'Alex', 'Joanna', 'Ivanna', 'Iren',
              'Sam', 'Bruce', 'Kylie', 'Daniel', 'Linda', 'Mary', 'Chris', 'Christina', 'Penny']
-    name_ = names[randint(0, len(names))]
+    name_ = names[randint(0, len(names) - 1)]
     surnames = ['Johnson', 'Curtis', 'Willis', 'Smith', 'Ripley', 'Morgan', 'Jefferson', 'McCallan', 'Andersson',
                 'Peterson', 'Jackson', 'Jones', 'Sanders', 'Nixon', 'Callahan', 'Richards', 'Newman', 'Hatfield',
                 'Newman', 'Burton']
-    surname_ = surnames[randint(0, len(surnames))]
+    surname_ = surnames[randint(0, len(surnames) - 1)]
 
     phone_ = [randint(1000000, 9999999) for index in range(0, randint(0, 2))]
     mail_ = f'{name_}.{surname_}@fakeidentity.com'
