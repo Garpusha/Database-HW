@@ -40,6 +40,20 @@ class UserRecords:
             """, (AsIs(table_name), file_name))
             self.connection.commit()
 
+    def input_record(self):
+        user_id = input('Enter UserID: ')
+        if not user_id.isdecimal():
+            print('Wrong ID, only decimal numbers allowed.')
+            return -1
+        user_id = int(user_id)
+        with self.connection.cursor() as my_cur:
+            my_cur.execute("SELECT COUNT(user_id) FROM users WHERE user_id = %s;", (user_id,))
+            records_ = my_cur.fetchone()[0]
+            if records_ == 0:
+                print(f'UserID {user_id} not found.')
+                return -1
+        return user_id
+
     def create(self, user_details):
         with self.connection.cursor() as my_cur:
             my_cur.execute("SELECT max(user_id) FROM users;")
@@ -95,20 +109,10 @@ class UserRecords:
                 print('\n')
 
     def add_phone(self):
-        user_id = input('Enter UserID to add phone number: ')
-        if not user_id.isdecimal():
-            print('Wrong ID, only decimal numbers allowed.')
+        user_id = self.input_record()
+        if user_id == -1:
             return
-        user_id = int(user_id)
         with self.connection.cursor() as my_cur:
-            my_cur.execute("""
-            SELECT user_id FROM users;
-            """)
-            records_ = my_cur.fetchall()
-            records_ = [(record_[0]) for record_ in records_]
-            if not user_id in records_:
-                print(f'UserID {user_id} not found.')
-                return
             phone_ = randint(1000000, 9999999)
             my_cur.execute("SELECT max(phone_id) FROM phones;")
             phone_id = my_cur.fetchone()
@@ -120,18 +124,10 @@ class UserRecords:
             print(f'Phone number {phone_} was added to UserID {user_id}')
 
     def change(self):
-        user_id = input('Enter UserID to update information: ')
-        if not user_id.isdecimal():
-            print('Wrong ID, only decimal numbers allowed.')
+        user_id = self.input_record()
+        if user_id == -1:
             return
-        user_id = int(user_id)
         with self.connection.cursor() as my_cur:
-            my_cur.execute("SELECT COUNT(user_id) FROM users WHERE user_id = %s;", (user_id,))
-            records_ = my_cur.fetchone()[0]
-            # records_ = [(record_[0]) for record_ in records_]
-            if records_ == 0:
-                print(f'UserID {user_id} not found.')
-                return
             user_details = get_new_identity()
             my_cur.execute("""
             UPDATE users SET name = %s, surname = %s WHERE user_id = %s;
@@ -158,6 +154,40 @@ class UserRecords:
             print(f'{user_details[0]} {user_details[1]}, {user_details[2]}')
             [print(index, end=' ') for index in user_details[3]]
             print('\n')
+
+    def delete_phone(self):
+        user_id = self.input_record()
+        if user_id == -1:
+            return
+        with self.connection.cursor() as my_cur:
+            my_cur.execute('SELECT COUNT(phone_no) FROM phones WHERE user_id = %s;', (user_id,))
+            phones_ = my_cur.fetchone()[0]
+            if phones_ == 0:
+                print(f'UserID {user_id} has no phone numbers.')
+                return
+            my_cur.execute('SELECT phone_no FROM phones WHERE user_id = %s', (user_id,))
+            phones_ = my_cur.fetchall()
+            phones_ = [phone_[0] for phone_ in phones_]
+            [print(f'{index}. {phone_}') for index, phone_ in enumerate(phones_)]
+            phones_q_ = len(phones_)
+            print(f'{phones_q_}. All')
+            choice_ = input('Enter phone you wish to delete: ')
+            if not choice_.isdecimal():
+                print('Wrong input')
+                return
+            choice_ = int(choice_)
+            if choice_ > phones_q_:
+                print('Wrong input')
+                return
+            elif choice_ == phones_q_:
+                my_cur.execute('DELETE FROM phones WHERE user_id = %s;', (user_id,))
+                print(f'All phones from UserID {user_id} deleted.')
+                self.connection.commit()
+                return
+            else:
+                my_cur.execute('DELETE FROM phones WHERE user_id = %s AND phone_no = %s;', (user_id, phones_[choice_]))
+                self.connection.commit()
+                print(f'Phone {phones_[choice_]} from UserID {user_id} deleted.')
 
 def read_config(path, section, parameter):
     config = configparser.ConfigParser()
@@ -211,5 +241,7 @@ while True:
         my_record.add_phone()
     elif choice == '3':
         my_record.change()
+    elif choice == '4':
+        my_record.delete_phone()
     elif choice == '7':
         my_record.get_list()
