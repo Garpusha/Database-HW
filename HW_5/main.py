@@ -189,6 +189,23 @@ class UserRecords:
                 self.connection.commit()
                 print(f'Phone {phones_[choice_]} from UserID {user_id} deleted.')
 
+    def delete(self):
+        with self.connection.cursor() as my_cur:
+            my_cur.execute('SELECT user_id, name, surname FROM users;')
+            records_ = my_cur.fetchall()
+            [print(f'{record_[0]}. {record_[1]} {record_[2]}') for record_ in records_]
+            user_id = self.input_record()
+            if user_id == -1:
+                return
+            my_cur.execute('DELETE FROM phones WHERE user_id = %s;', (user_id,))
+            my_cur.execute('DELETE FROM emails WHERE user_id = %s;', (user_id,))
+            my_cur.execute('DELETE FROM users WHERE user_id = %s;', (user_id,))
+            self.connection.commit()
+            print(f'Record UserID {user_id} was deleted.')
+
+
+
+        
 def read_config(path, section, parameter):
     config = configparser.ConfigParser()
     config.read(path)
@@ -243,5 +260,8 @@ while True:
         my_record.change()
     elif choice == '4':
         my_record.delete_phone()
+    elif choice == '5':
+        my_record.delete()
+
     elif choice == '7':
         my_record.get_list()
