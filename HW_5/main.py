@@ -70,6 +70,54 @@ class UserRecords:
             print(f'New record added:\nID: {user_id}, Name: {user_details[0]} {user_details[1]}')
             print(f'E-mail: {user_details[2]} Phone(s): {user_details[3]}')
 
+    def get_list(self):
+        with self.connection.cursor() as my_cur:
+            my_cur.execute("""
+            SELECT user_id, name, surname FROM users;
+            """)
+            records_ = my_cur.fetchall()
+            for record_ in records_:
+                print(f'{record_[0]}. {record_[1]} {record_[2]}')
+                # user_id = str(record_[0])
+                my_cur.execute("""
+                SELECT email FROM emails
+                WHERE user_id = %s;""", (record_[0],))
+                emails_ = my_cur.fetchall()
+                print('Emails:', end=' ')
+                [print(email_[0], end=' ') for email_ in emails_]
+                my_cur.execute("""
+                SELECT phone_no FROM phones
+                WHERE user_id = %s;""", (record_[0],))
+                phones_ = my_cur.fetchall()
+                print('\nPhones:', end=' ')
+                [print(phone_[0], end=' ') for phone_ in phones_]
+                print('\n')
+
+    def add_phone(self):
+        user_id = input('Enter UserID to add phone number: ')
+        if not user_id.isdecimal():
+            print('Wrong ID, only decimal numbers allowed.')
+            return
+        user_id = int(user_id)
+        with self.connection.cursor() as my_cur:
+            my_cur.execute("""
+            SELECT user_id FROM users;
+            """)
+            records_ = my_cur.fetchall()
+            records_ = [(record_[0]) for record_ in records_]
+            if not user_id in records_:
+                print(f'UserID {user_id} not found.')
+                return
+            phone_ = randint(1000000, 9999999)
+            my_cur.execute("SELECT max(phone_id) FROM phones;")
+            phone_id = my_cur.fetchone()
+            phone_id = phone_id[0]
+            phone_id += 1
+            my_cur.execute("""INSERT INTO phones (phone_id, phone_no, user_id)
+            VALUES (%s, %s, %s);""", (phone_id, phone_, user_id))
+            self.connection.commit()
+            print(f'Phone number {phone_} was added to UserID {user_id}')
+
 def read_config(path, section, parameter):
      config = configparser.ConfigParser()
      config.read(path)
@@ -108,14 +156,20 @@ my_record.create_structure()
 # my_record.load_data('phones', f'{path_to_csv}phones.csv')
 
 while True:
+    print('-' * 20)
     print('1. Add record\n2. Add phone number\n3. Change record')
-    print('4. Delete phone\n5. Delete record\n6. Find record\n\0. Exit')
+    print('4. Delete phone\n5. Delete record\n6. Find record\n7. List records\n0. Exit')
+    print('-' * 20)
     choice = input('Enter option: ')
     if choice == '0':
         print('Goodbye!')
         exit()
     elif choice == '1':
         my_record.create(get_new_identity())
+    elif choice == '2':
+        my_record.add_phone()
+    elif choice == '7':
+        my_record.get_list()
 
 
 
