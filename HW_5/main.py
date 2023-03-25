@@ -300,6 +300,7 @@ while True:
     choice = input('Enter option: ')
     if choice == '0':
         print('Goodbye!')
+        my_record.connection.close()
         exit()
     elif choice == '1':
         my_record.create(get_new_identity())
