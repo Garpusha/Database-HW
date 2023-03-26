@@ -94,20 +94,20 @@ class UserRecords:
             SELECT name, surname FROM users WHERE user_id = %s;
             """, (user_id,))
             record_ = my_cur.fetchone()
-            print(f'{user_id}. {record_[0]} {record_[1]}')
+            print(f'{user_id}. {record_[0]} {record_[1]}', end=' ')
             my_cur.execute("""
             SELECT email FROM emails
             WHERE user_id = %s;""", (user_id,))
             emails_ = my_cur.fetchall()
-            print(f'E-mails: ', end=' ')
+            print(f'E-mails:', end=' ')
             [print(f'{email_[0]}', end=' ') for email_ in emails_]
-            print(f'\nPhones: ', end=' ')
+            print(f'Phones:', end=' ')
             my_cur.execute("""
             SELECT phone_no FROM phones
             WHERE user_id = %s;""", (user_id,))
             phones_ = my_cur.fetchall()
             [print(phone_[0], end=' ') for phone_ in phones_]
-            print('\n')
+            print(f'\n', end='')
 
     def get_list(self):  # Get all users data
         with self.connection.cursor() as my_cur:
@@ -117,8 +117,8 @@ class UserRecords:
             records_ = my_cur.fetchall()
             [self.print_user_details(record_[0]) for record_ in records_]
 
-    def add_phone(self):  # Add new phone number to the existing user
-        user_id = self.input_record()
+    def add_phone(self, user_id):  # Add new phone number to the existing user
+        # user_id = self.input_record()
         if user_id == -1:
             return
         with self.connection.cursor() as my_cur:
@@ -132,39 +132,42 @@ class UserRecords:
             self.connection.commit()
             print(f'Phone number {phone_} was added to UserID {user_id}')
 
-    def change(self):  # Update existing record. New data will be generated automatically.
-        user_id = self.input_record()
+    def change(self, user_id):  # Update existing record. New data will be generated automatically.
+        # user_id = self.input_record()
         if user_id == -1:
             return
         with self.connection.cursor() as my_cur:
+            print('Choose info to change:\n1. Name, surname and e-mail\n2. Phone\n')
+            choice_ = input('Enter option: ')
             user_details = get_new_identity()
-            my_cur.execute("""
-            UPDATE users SET name = %s, surname = %s WHERE user_id = %s;
-            """, (user_details[0], user_details[1], user_id))
-            my_cur.execute("""
-            UPDATE emails SET email = %s WHERE user_id = %s;
-            """, (user_details[2], user_id))
-            my_cur.execute("""
-            UPDATE emails SET email = %s WHERE user_id = %s;
-            """, (user_details[2], user_id))
+            if choice_ == '1':
+                my_cur.execute("""
+                UPDATE users SET name = %s, surname = %s WHERE user_id = %s;
+                """, (user_details[0], user_details[1], user_id))
+                my_cur.execute("""
+                UPDATE emails SET email = %s WHERE user_id = %s;
+                """, (user_details[2], user_id))
+            elif choice_ == '2':
+                my_cur.execute("SELECT count(phone_no) FROM phones WHERE user_id = %s;", (user_id,))
+                phones_ = my_cur.fetchone()[0]
+                if phones_ != 0:
+                    my_cur.execute("SELECT phone_id FROM phones WHERE user_id = %s;", (user_id,))
+                    phone_ids_ = my_cur.fetchall()
+                    phone_ids_ = [(phone_id_[0]) for phone_id_ in phone_ids_]
+                    user_details[3] = []
+                    for index, phone_id_ in enumerate(phone_ids_):
+                        user_details[3].append(randint(1000000, 9999999))
+                        my_cur.execute("UPDATE phones SET phone_no = %s WHERE phone_id = %s;",
+                       (user_details[3][index], phone_id_))
+            else:
+                print('Wrong input.')
+                return
             self.connection.commit()
-            my_cur.execute("SELECT count(phone_no) FROM phones WHERE user_id = %s;", (user_id,))
-            phones_ = my_cur.fetchone()[0]
-            if phones_ != 0:
-                my_cur.execute("SELECT phone_id FROM phones WHERE user_id = %s;", (user_id,))
-                phone_ids_ = my_cur.fetchall()
-                phone_ids_ = [(phone_id_[0]) for phone_id_ in phone_ids_]
-                user_details[3] = []
-                for index, phone_id_ in enumerate(phone_ids_):
-                    user_details[3].append(randint(1000000, 9999999))
-                    my_cur.execute("UPDATE phones SET phone_no = %s WHERE phone_id = %s;",
-                                   (user_details[3][index], phone_id_))
-                self.connection.commit()
             print('Record updated.')
             self.print_user_details(user_id)
 
-    def delete_phone(self):  # Delete existing phone number
-        user_id = self.input_record()
+    def delete_phone(self, user_id):  # Delete existing phone number
+        # user_id = self.input_record()
         if user_id == -1:
             return
         with self.connection.cursor() as my_cur:
@@ -305,11 +308,11 @@ while True:
     elif choice == '1':
         my_record.create(get_new_identity())
     elif choice == '2':
-        my_record.add_phone()
+        my_record.add_phone(my_record.input_record())
     elif choice == '3':
-        my_record.change()
+        my_record.change(my_record.input_record())
     elif choice == '4':
-        my_record.delete_phone()
+        my_record.delete_phone(my_record.input_record())
     elif choice == '5':
         my_record.delete()
     elif choice == '6':
